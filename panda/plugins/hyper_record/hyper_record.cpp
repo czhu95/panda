@@ -17,6 +17,8 @@ PANDAENDCOMMENT */
 
 #include "panda/plugin.h"
 
+#define NAME_LEN 64
+
 // #include "../callstack_instr/callstack_instr.h"
 // #include "../callstack_instr/callstack_instr_ext.h"
 
@@ -28,8 +30,8 @@ void uninit_plugin(void *);
 bool guest_hypercall_callback(CPUState *cpu);
 }
 
-static const char* name;
 #if defined(TARGET_I386)
+static char name[NAME_LEN] = "";
 static bool in_record = false;
 #endif
 
@@ -38,6 +40,12 @@ bool guest_hypercall_callback(CPUState *cpu) {
     CPUArchState *env = (CPUArchState*)cpu->env_ptr;
     if (env->regs[R_EAX] == 0x80001212) {
         if (!in_record) {
+            printf("value in ebx: " TARGET_FMT_lx "\n", env->regs[R_EBX]);
+            if (panda_virtual_memory_rw(cpu, env->regs[R_EBX],
+                                        (uint8_t *) name, NAME_LEN, false)) {
+                LOG_ERROR("Invalid name pointer in ebx");
+                return true;
+            }
             printf("PANDA[%s]:begin record %s.\n", PLUGIN_NAME, name);
             panda_record_begin(name, NULL);
             in_record = true;
@@ -65,12 +73,12 @@ bool guest_hypercall_callback(CPUState *cpu) {
 bool init_plugin(void *self) {
     panda_cb pcb;
 
-    panda_arg_list *args = panda_get_args(PLUGIN_NAME);
-    name = panda_parse_string(args, "name", NULL);
+    // panda_arg_list *args = panda_get_args(PLUGIN_NAME);
+    // name = panda_parse_string(args, "name", NULL);
 
-    if (!name) {
-        LOG_ERROR("No name argument provided.");
-    }
+    // if (!name) {
+    //     LOG_ERROR("No name argument provided.");
+    // }
 
     // panda_require("callstack_instr");
     // if (!init_callstack_instr_api()) return false;
