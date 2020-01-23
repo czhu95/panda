@@ -30,3 +30,4 @@ mmio_trace
 hooks
 memorymap
 memtrace
+hyper_record
