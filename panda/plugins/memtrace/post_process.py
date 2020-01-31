@@ -5,20 +5,20 @@ import numpy as np
 m = 1 * 1024 * 1024 * 1024
 
 def taint(mg = 16, ig = 100):
-    with open("../../../test_memtrace.txt", 'r') as fid:
+    with open("../../../memtrace.txt", 'r') as fid:
         trace = fid.readlines()
 
     mg_byte = mg * 1024 * 1024
 
     hist_k = np.zeros([len(trace) // ig + 1, m // mg_byte])
     hist_u = np.zeros([len(trace) // ig + 1, m // mg_byte])
-    max_addr = 0
+    num_illegal_addr = 0
 
     for i, t in enumerate(trace):
         t = t.split()
         addr = int(t[-1], 16)
         if addr > m:
-            print(hex(addr))
+            num_illegal_addr += 1
             continue
 
         # print(i, i // ig, addr, addr // mg)
@@ -29,6 +29,7 @@ def taint(mg = 16, ig = 100):
         else:
             import pdb; pdb.set_trace()
 
+    print ('{}% illegal phyisical addresses not processed.'.format(num_illegal_addr / len(trace)))
     return hist_k, hist_u
 
 def main():
